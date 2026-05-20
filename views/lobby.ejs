@@ -1,0 +1,235 @@
+<div class="container-fluid">
+    <div class="row align-items-center">
+        <div class="col-auto">
+            <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+                <input type="radio" class="btn-check" name="btnradio" id="join-btn" autocomplete="off" <%= mode === 'join' ? 'checked' : '' %>>
+                <label class="btn btn-outline-primary" for="join-btn">Join</label>
+
+                <input type="radio" class="btn-check" name="btnradio" id="watch-btn" autocomplete="off" <%= mode === 'watch' ? 'checked' : '' %>>
+                <label class="btn btn-outline-primary" for="watch-btn">Watch</label>
+            </div>
+        </div>
+        <div class="col-auto ms-auto">
+            <button type="button" class="btn btn-danger" id="create-btn">Create room</button>
+        </div>
+    </div>
+
+    <% for (let i = 0; i < 10; i++) { %>
+        <div class="row g-3 mb-3">
+            <% for (let j = 0; j < 3; j++) { 
+                const idx = i * 3 + j;
+            %>
+            <div class="col-12 col-md-4">
+                <% if(pageRooms[idx]) { %>
+                    <%- include('./components/room', { mode, ...pageRooms[idx] }) %>
+                <% } else { %>
+                    <%- include('./components/room', {
+                    active: false,
+                    id: null,
+                    name: null,
+                    isPrivate: true,
+                    watchable: false
+                    }) %>
+                <% } %>
+            </div>
+            <% } %>
+        </div>
+    <% } %>
+
+</div>
+
+<%- include('./components/lobby-pagination', { page, totalPages }) %>
+
+<%- include('./components/room-creator') %>
+<%- include('./components/passwordGetter') %>
+
+<%- include('./components/generic-popup', { 
+    id:     'incorrect-password-modal', 
+    title:  'Incorrect password', 
+    message:'Given password is incorrect for this room.'
+}) %>
+
+<%- include('./components/generic-popup', { 
+    id:     'game-started-modal', 
+    title:  "Can't join", 
+    message:'The game has already started.'
+}) %>
+
+<%- include('./components/generic-popup', { 
+    id:     'room-not-found-modal', 
+    title:  'Room not found', 
+    message:"Given room doesn't exist anymore."
+}) %>
+
+<%- include('./components/generic-popup', { 
+    id:     'game-ended-modal', 
+    title:  "Game ended", 
+    message:'Game has already ended.'
+}) %>
+
+<%- include('./components/generic-popup', { 
+    id:     'unexpected-error-modal', 
+    title:  'Unexpected error', 
+    message:'For one reason or another this action was unsuccessful.'
+}) %>
+
+<script>
+    const joinBtn = document.getElementById('join-btn');
+    const watchBtn = document.getElementById('watch-btn');
+    const createBtn = document.getElementById('create-btn');
+
+    // helpers
+
+    function joinErrorCase(cause){
+        let modalID;
+
+        switch(cause){
+            case "room not found":
+                modalID = 'room-not-found-modal';
+                break;
+            case "password":
+                modalID = 'incorrect-password-modal';
+                break;
+            case "game started":
+                modalID = 'game-started-modal';
+                break;
+            case 'timeout', 'game ended':
+                modalID = 'game-ended-modal';
+                break;
+            default:
+                modalID = 'unexpected-error-modal';
+                break;
+        }
+
+        const el = document.getElementById(modalID);
+        const instance = new bootstrap.Modal(el);
+        instance.show();
+    }
+
+    // event listeners
+
+    if(joinBtn) {
+        joinBtn.addEventListener('change', () => {
+            if(joinBtn.checked){
+                window.location.href = '/lobby?mode=join&page=1';
+            }
+        });
+    }
+
+    if(watchBtn) {
+        watchBtn.addEventListener('change', () => {
+            if(watchBtn.checked){
+                window.location.href = '/lobby?mode=watch&page=1';
+            }
+        });
+    }
+    
+    if(createBtn) {
+        createBtn.addEventListener('click', () => {
+            const el = document.getElementById("room-creator-modal");
+            const instance = new bootstrap.Modal(el);
+            instance.show(); 
+        });
+    }
+
+    /*
+    window.addEventListener('beforeunload', () => {
+        sessionStorage.setItem('lobbyScrollY', window.scrollY);
+    });
+
+    window.addEventListener('load', () => {
+        const y = sessionStorage.getItem('lobbyScrollY');
+        if (y !== null) {
+        window.scrollTo(0, Number(y));
+        }
+    });
+    */
+    
+    document.addEventListener('DOMContentLoaded', () => {
+        let selectedRoomId = null;
+        const selectedMode = "<%= mode %>";
+
+        document.querySelectorAll('.room-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedRoomId = btn.dataset.id;
+                const isPrivate = btn.dataset.private === 'true';
+
+                if (isPrivate) {
+                    new bootstrap.Modal(document.getElementById('password-modal')).show();
+                } else {
+                    const communicate = selectedMode === 'join'? 'lobby:join-attempt' : 'lobby:watch-attempt'
+                    socket.emit(communicate, { id: selectedRoomId, password: null });
+                }
+            });
+        });
+
+        document.getElementById('password-form').addEventListener('submit', e => {
+                e.preventDefault();
+
+                const password = document.getElementById('password-input').value;
+
+                socket.emit(
+                    selectedMode === 'join'
+                        ? 'lobby:join-attempt'
+                        : 'lobby:watch-attempt',
+                    { id: selectedRoomId, password }
+                );
+            });
+    });
+
+    // socket
+
+    socket.on('lobby:join-result', (result) => {
+        if(result.success) {
+            window.location.href = '/multiplayer';
+            return;
+        }
+
+        joinErrorCase(result.cause);
+    });
+
+    socket.on('lobby:watch-result', (result) => {
+        if(result.success) {
+            window.location.href = '/multiplayer';
+            return;
+        }
+
+        let modalID;
+        switch(result.cause){
+            case "room not found":
+                modalID = 'room-not-found-modal';
+                break;
+            case "password":
+                modalID = 'incorrect-password-modal';
+                break;
+            default:
+                modalID = 'unexpected-error-modal';
+                break;
+        }
+
+        const el = document.getElementById(modalID);
+        const instance = new bootstrap.Modal(el);
+
+        instance.show();
+    });
+
+    socket.on('lobby:create-room-result', (result) => {
+        if(result.success) {
+            window.location.href = '/multiplayer';
+            return;
+        }
+
+        switch(result.cause) {
+            case('name already exists'):
+                const el = document.getElementById('room-name');    //from room-creator.ejs
+                el.setCustomValidity("Room with that name already exists.");
+                el.reportValidity();
+                break;
+            default: 
+                joinErrorCase(result.cause);
+                break;
+        }
+
+    });
+
+</script>

@@ -1,0 +1,55 @@
+<ul class="pagination justify-content-center" id="lobby-pagination">
+    <li class="page-item <%= page === 1 ? 'disabled' : '' %>">
+        <a class="page-link" href="?mode=<%= mode %>&page=<%= page - 1 %>">&laquo;</a>
+    </li>
+
+    <li class="page-item <%= page === 1 ? 'active' : '' %>">
+        <a class="page-link" href="?mode=<%= mode %>&page=1"><%= 1 %></a>
+    </li>
+
+    <% if(page <= 3) { %>
+        <% for (let p = 2; p <= 3; p++) { %>
+            <li class="page-item <%= p === page ? 'active' : '' %> <%= (p > 1 && p > totalPages) ? 'disabled' : '' %>">
+                <a class="page-link" href="?mode=<%= mode %>&page=<%= p %>"><%= p %></a>
+            </li>
+        <% } %>
+        <% if(3 < totalPages) { %>
+            <li class="page-item disabled">
+                <a class="page-link">...</a>
+            </li>
+            <li class="page-item">
+                <a class="page-link" href="?mode=<%= mode %>&page=<%= totalPages %>"><%= totalPages %></a>
+            </li>
+        <% } %>
+    <% } else if( page !== totalPages ) {%>
+        <li class="page-item disabled">
+            <a class="page-link">...</a>
+        </li>
+        <li class="page-item active">
+            <a class="page-link" href="?mode=<%= mode %>&page=<%= page %>"><%= page %></a>
+        </li>
+        <li class="page-item disabled">
+            <a class="page-link">...</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?mode=<%= mode %>&page=<%= totalPages %>"><%= totalPages %></a>
+        </li>
+    <% } else { %>
+        <li class="page-item disabled">
+            <a class="page-link">...</a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?mode=<%= mode %>&page=<%= page-2 %>"><%= page-2 %></a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?mode=<%= mode %>&page=<%= page-1 %>"><%= page-1 %></a>
+        </li>
+        <li class="page-item active">
+            <a class="page-link" href="?mode=<%= mode %>&page=<%= page %>"><%= page %></a>
+        </li>
+    <% } %>
+
+    <li class="page-item <%= (page === totalPages || totalPages === 0)? 'disabled' : '' %>">
+        <a class="page-link" href="?mode=<%= mode %>&page=<%= page + 1 %>">&raquo;</a>
+    </li>
+</ul>

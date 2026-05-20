@@ -1,0 +1,16 @@
+<% if (loginSuccess) { %>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="liveToast" class="toast bg-success text-white" role="alert" aria-live="assertive" aria-atomic="true">
+        <div class="toast-header bg-success text-white">
+        <strong class="me-auto">Successfully logged in!</strong>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+    </div>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        var toast = new bootstrap.Toast(document.getElementById('liveToast'), { delay: 3000 });
+        toast.show();
+    });
+    </script>
+<% } %>

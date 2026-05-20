@@ -1,0 +1,100 @@
+<div class="modal fade" id="delete-account-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Delete your account</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>To delete your account you need to enter your password:</p>
+                <form id="delete-account-form">
+                    <input type="password" class="form-control" id="confirm-account-deletion-password-input" minlength="8" maxlength="32" required>
+                    <button class="btn btn-secondary mt-3" id="confirm-account-deletion-btn">Confirm</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<%- include('./generic-popup', { 
+    id:     'not-logged-in-modal', 
+    title:  'Not logged in', 
+    message:"To delete any account you need to log in first."
+}) %>
+
+<%- include('./generic-popup', { 
+    id:     'nonexistant-user-modal', 
+    title:  'Nonexistant username', 
+    message:"Your username doesn't exist in the database."
+}) %>
+
+<%- include('./generic-popup', { 
+    id:     'unexpected-error-account-deletion-modal', 
+    title:  'Unexpected error', 
+    message:'For one reason or another this action was unsuccessful.'
+}) %>
+
+<script>
+    const confirmBtn    = document.getElementById("confirm-account-deletion-btn");
+    const passwordField = document.getElementById("confirm-account-deletion-password-input");
+    const form          = document.getElementById("delete-account-form");
+
+    confirmBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        socket.emit('navbar:account-deletion', { password: passwordField.value });
+    });
+
+    socket.on('navbar:logged-out', () => {
+        document.cookie = "user=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        let toast = new bootstrap.Toast(document.getElementById("account-deletion-success-toast"), { delay: 1000 });
+        toast.show();
+        setTimeout(() => {
+            window.location.reload();
+        }, 1100);
+    });
+
+    socket.on('navbar:account-deletion-result', (result) => {
+        if(result.success){
+            const el = document.getElementById('delete-account-modal');
+            const instance = bootstrap.Modal.getInstance(el);
+            instance?.hide();
+            socket.emit('navbar:logout');
+            return;
+        }
+
+        let modalID = undefined;
+        let incorrectPassword = false;
+        switch(result.cause){
+            case 'not logged in':
+                modalID = 'not-logged-in-modal'
+                break;
+            case 'username does not exist':
+                modalID = 'nonexistant-user-modal'
+                break;
+            case 'incorrect password':
+                passwordField.setCustomValidity("Incorrect password");
+                passwordField.reportValidity();
+                break;
+            default:
+                modalID = 'unexpected-error-account-deletion-modal'
+                break;
+        }
+
+        if (incorrectPassword && !form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        if(modalID){
+            const el = document.getElementById(modalID);
+            const instance = new bootstrap.Modal(el);
+            instance.show();
+        }
+    });
+
+</script>

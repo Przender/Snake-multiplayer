@@ -1,0 +1,437 @@
+<div class="container d-flex justify-content-center align-items-center">
+    <div class="play-box d-flex flex-column justify-content-center align-items-center">
+        <div class="board">
+            <!-- Background table -->
+            <table class="table background">
+                <% for (let i = 0; i < 12; i++) { %>
+                    <tr>
+                    <% for (let j = 0; j < 12; j++) { %>
+                        <td>
+                            <% if( i % 2 === j % 2) { %>
+                                <img src="/resources/tile-1.png" class="recolored" alt="">
+                            <% } else { %>
+                                <img src="/resources/tile-2.png" class="recolored" alt="">
+                            <% } %>
+                        </td>
+                    <% } %>
+                    </tr>
+                <% } %>
+            </table>
+
+            <!-- Bottom layer: snake -->
+            <table class="table bottom">
+              <% for (let i = 0; i < 12; i++) { %>
+                  <tr>
+                  <% for (let j = 0; j < 12; j++) { %>
+                      <td><img src="/resources/empty.png" class="recolored" alt=""></td>
+                  <% } %>
+                  </tr>
+              <% } %>
+            </table>
+
+            <!-- Top layer: snake2 and sometimes ouch -->
+            <table class="table top">
+              <% for (let i = 0; i < 12; i++) { %>
+                  <tr>
+                  <% for (let j = 0; j < 12; j++) { %>
+                      <td><img src="/resources/empty.png" class="recolored" alt=""></td>
+                  <% } %>
+                  </tr>
+              <% } %>
+            </table>
+
+            <!-- Topper layer: fruits / ouch -->
+            <table class="table topper">
+              <% for (let i = 0; i < 12; i++) { %>
+                  <tr>
+                  <% for (let j = 0; j < 12; j++) { %>
+                      <td><img src="/resources/empty.png" class="recolored" alt=""></td>
+                  <% } %>
+                  </tr>
+              <% } %>
+            </table>
+        </div>
+    </div>
+</div>
+
+<%- include('./components/endGameMessage', {
+  id: 'won-message',
+  title: 'You win!',
+  message: "Congratulations! You've won the game of snake :D"
+}) %>
+
+<%- include('./components/endGameMessage', {
+  id: 'lost-message',
+  title: 'You lost',
+  message: 'Oopsie daisy! Better luck next time!'
+}) %>
+
+<%- include('./components/endGameMessage', {
+  id: 'player1Won-message',
+  title: 'Green snake won!',
+  message: 'Player of the green snake won!'
+}) %>
+
+<%- include('./components/endGameMessage', {
+  id: 'player2Won-message',
+  title: 'Blue snake won!',
+  message: 'Player of the blue snake won!'
+}) %>
+
+<%- include('./components/endGameMessage', {
+  id: 'lostBoth-message',
+  title: 'You both lost',
+  message: 'Oh dear. Both players lost at the same time. What a twist of fate.'
+}) %>
+
+<%- include('./components/endGameMessage', {
+  id: 'lostBothWatcher-message',
+  title: 'Both snakes lost',
+  message: 'Oh dear. Both players lost at the same time. What a twist of fate.'
+}) %>
+
+<%- include('./components/endGameMessage', {
+  id: 'tie-message',
+  title: 'You tied!',
+  message: "Wow! That's actually more impressive than a simple win."
+}) %>
+
+<%- include('./components/endGameMessage', {
+  id: 'tieWatcher-message',
+  title: "It's a tie!",
+  message: "Wow! That's actually more impressive than a simple win."
+}) %>
+
+<%- include('./components/endGameMessage', {
+  id: 'opponentDisconnected-message',
+  title: 'Opponent disconnected',
+  message: 'Unfortunately, your opponent has disconnected.'
+}) %>
+
+<%- include('./components/endGameMessage', {
+  id: 'someoneDisconnected-message',
+  title: 'Someone disconnected',
+  message: "Unfortunately, someone's disconnected. Game ended."
+}) %>
+
+<%- include('./components/endGameMessage', {
+  id: 'not-in-a-room-message',
+  title: 'Invalid access',
+  message: "You are not currently in any room."
+}) %>
+
+<%- include('./components/endGameMessage', {
+  id: 'both-players-disconnected',
+  title: 'Both players disconnected',
+  message: "The game won't start."
+}) %>
+
+<div class="modal fade" id="waiting-message" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+   <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="staticBackdropLabel">Welcome to the game!</h1>
+      </div>
+      <div class="modal-body">
+        Press ready when you're ready to begin.
+      </div>
+      <div class="modal-footer align-items-center">
+        <button type="button" id="ready-btn" class="btn btn-primary">Ready</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="waiting-watcher-message" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+   <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="staticBackdropLabel">Getting ready</h1>
+      </div>
+      <div class="modal-body">
+        Waiting for the players to get ready.
+      </div>
+      <div class="modal-footer align-items-center">
+        <button type="button" id="waiting-watcher-btn" class="btn btn-primary">Return to menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- don't add fade to queuing-message. Else, waiting-message will not show -->
+<div class="modal" id="queuing-message" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+   <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="staticBackdropLabel">Waiting for an opponent</h1>
+      </div>
+      <div class="modal-body">
+        Sit back and relax.
+      </div>
+      <div class="modal-footer align-items-center">
+        <button type="button" id="queuing-btn" class="btn btn-primary">Return to menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+  // declarations
+  let direction = null;
+  let gamestate = null;
+
+  const BOARD_SIZE    = 12;
+  const bottomTable   = document.querySelector(".table.bottom");
+  const topTable      = document.querySelector(".table.top");
+  const topperTable   = document.querySelector(".table.topper");
+  const readyBtn      = document.getElementById('ready-btn');
+  const queuingBtn    = document.getElementById('queuing-btn');
+  const waitWatchBtn  = document.getElementById('waiting-watcher-btn');
+  const modalInstances = {};
+
+  let activeModalId = null;
+
+  const contentToFile = {
+    empty:  {1: 'empty.png' , 2: 'empty.png' },
+    head:   {1: 'head-1.png', 2: 'head-2.png'},
+    body:   {1: 'body-1.png', 2: 'body-2.png'},
+    turn:   {1: 'turn-1.png', 2: 'turn-2.png'},
+    tail:   {1: 'tail-1.png', 2: 'tail-2.png'},
+    ouch:   {1: 'ouch-1.png', 2: 'ouch-2.png'},
+    fruit:  {1: 'cherry.png', 2: 'cherry.png'},
+    head2:  {1: 'head-2.png', 2: 'head-1.png'},
+    body2:  {1: 'body-2.png', 2: 'body-1.png'},
+    turn2:  {1: 'turn-2.png', 2: 'turn-1.png'},
+    tail2:  {1: 'tail-2.png', 2: 'tail-1.png'},
+    ouch2:  {1: 'ouch-2.png', 2: 'ouch-1.png'},
+  };
+
+  const fixedAssets = new Set(['empty', 'fruit']);
+
+  // helpers
+
+  function reflectRotation(rotation){
+    return (rotation + 180 + 360) % 360;
+  }
+
+  function reflectDirection(direction){
+    switch(direction){
+      case 'up':    return 'down';
+      case 'down':  return 'up';
+      case 'left':  return 'right';
+      case 'right': return 'left';
+      default:      throw new Error("Illegar direction");
+    }
+  }
+
+  function renderBoardLayer(table, board) {
+    for (let y = 0; y < BOARD_SIZE; y++) {
+        for (let x = 0; x < BOARD_SIZE; x++) {
+          if(playerID === 2){
+            const cell = table.rows[y].cells[x].querySelector('img');
+            const content = board[11-y][11-x].content || 'empty';
+            const rotation = reflectRotation(board[11-y][11-x].rotation) || 0;
+            cell.src = `/resources/${contentToFile[content][2] || 'empty.png'}`;
+            if(!fixedAssets.has(content)) {
+              cell.style.transform = `rotate(${rotation}deg)`;
+            }
+          }
+          else {
+            const cell = table.rows[y].cells[x].querySelector('img');
+            const content = board[y][x].content || 'empty';
+            const rotation = board[y][x].rotation || 0;
+            cell.src = `/resources/${contentToFile[content][1] || 'empty.png'}`;
+            if(!fixedAssets.has(content)) {
+              cell.style.transform = `rotate(${rotation}deg)`;
+            }
+          } 
+        }
+    }
+  }
+
+  function keyToDirection(key) {
+    switch (key) {
+        case "ArrowUp": case "w":
+            return "up";
+        
+        case "ArrowDown": case "s":
+            return "down";
+        
+        case "ArrowLeft": case "a":
+            return "left";
+        
+        case "ArrowRight": case "d":
+            return "right";
+        
+        default: return null;
+    }
+  }
+
+  readyBtn.addEventListener('click', () => {
+    socket.emit('multiplayer:ready');
+  });
+
+  queuingBtn.addEventListener('click', () => {
+    window.location.href = '/';
+  });
+
+  waitWatchBtn.addEventListener('click', () => {
+    window.location.href = '/';
+  });
+
+  function showModalById(id, onetime=false) {
+    if(activeModalId && activeModalId !== id){
+      hideModalById(activeModalId);
+    }
+
+    
+    let instance = modalInstances[id];
+    if(!instance) {
+      const el = document.getElementById(id);
+      instance = new bootstrap.Modal(el);
+      modalInstances[id] = instance;
+
+      if( onetime ) {
+        el.addEventListener('hidden.bs.modal', () => {
+          window.location.href = '/';
+        }, { once: true });
+      }
+    }
+
+    activeModalId = id;
+    instance.show();
+    
+  }
+
+  function hideModalById(id) {
+    const instance = modalInstances[id];
+    if(instance){
+      instance.hide();
+      if(activeModalId === id) activeModalId = null;
+    }
+  }
+
+  // main logic
+
+  socket.on('connect', () => {
+    socket.emit('multiplayer:validate');
+  });
+
+  socket.on('multiplayer:validate-result', (result) => {
+      if(!result.success){
+        showModalById('not-in-a-room-message', true);
+      } else {
+        direction = result.dir;
+        gamestate = result.gamestate;
+      }
+  });
+
+  socket.on('multiplayer:joined', () => {
+    showModalById('queuing-message');
+  });
+
+  socket.on('multiplayer:prestart', () => {
+    hideModalById('queuing-message');
+
+    if(playerID !== 0)
+      showModalById('waiting-message');
+    else
+      showModalById('waiting-watcher-message');
+  });
+
+  socket.on('multiplayer:start', () => {
+    gamestate = 'running';
+    if(playerID !== 0)
+      hideModalById('waiting-message');
+    else
+      hideModalById('waiting-watcher-message');
+  });
+
+  socket.on('game:board', (boards) => {
+    renderBoardLayer(bottomTable, boards.bottom);
+    renderBoardLayer(topTable, boards.top);
+    renderBoardLayer(topperTable, boards.topper);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (gamestate !== "running" || playerID === 0) return;
+
+    const dir = keyToDirection(event.key);
+    if(dir) direction = dir;
+
+    direction = (playerID === 1) ? direction : reflectDirection(direction);
+    socket.emit('multiplayer:move', direction);
+  });
+
+  // messages
+  
+  socket.on('multiplayer:opponentDisconnected', () => {
+    gamestate = 'end';
+    hideModalById('queuing-message');
+    if(playerID !== 0)
+      hideModalById('waiting-message');
+    else
+      hideModalById('waiting-watcher-message');
+
+    const id = (playerID !== 0) ? 
+      'opponentDisconnected-message' : 
+      'someoneDisconnected-message';
+    
+    showModalById(id, true);
+  });
+
+  socket.on('multiplayer:bothPlayersDisconnected', () => {
+    gamestate = 'end';
+    hideModalById('queuing-message');
+    if(playerID !== 0)
+      hideModalById('waiting-message');
+    else
+      hideModalById('waiting-watcher-message');
+    
+    showModalById('both-players-disconnected', true);
+  });
+
+  socket.on('game:won', () => {
+    gamestate = 'end';
+    if(playerID !== 0) 
+      showModalById('won-message', true);
+  });
+
+  socket.on('game:player1-won', () => {
+    gamestate = 'end';
+    if(playerID === 0) 
+      showModalById('player1Won-message', true);
+  });
+
+  socket.on('game:player2-won', () => {
+    gamestate = 'end';
+    if(playerID === 0) 
+      showModalById('player2Won-message', true);
+  });
+
+  socket.on('game:lost', () => {
+    gamestate = 'end';
+    if(playerID !== 0) 
+      showModalById('lost-message', true);
+  });
+
+  socket.on('game:lostBoth', () => {
+    gamestate = 'end';
+    const id = (playerID !== 0) ? 
+      'lostBoth-message' : 
+      'lostBothWatcher-message';
+
+    showModalById(id, true);
+  });
+
+  socket.on('game:tied', () => {
+    gamestate = 'end';
+    const id = (playerID !== 0) ? 
+      'tie-message' : 
+      'tieWatcher-message';
+
+    showModalById(id, true);
+  });
+
+</script>

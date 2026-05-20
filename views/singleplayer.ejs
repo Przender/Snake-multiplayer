@@ -1,0 +1,168 @@
+<div class="container d-flex justify-content-center align-items-center">
+    <div class="play-box d-flex flex-column justify-content-center align-items-center">
+        <div class="board">
+            <!-- Background table -->
+            <table class="table background">
+                <% for (let i = 0; i < 12; i++) { %>
+                    <tr>
+                    <% for (let j = 0; j < 12; j++) { %>
+                        <td>
+                            <% if( i % 2 === j % 2) { %>
+                                <img src="/resources/tile-1.png" class="recolored" alt="">
+                            <% } else { %>
+                                <img src="/resources/tile-2.png" class="recolored" alt="">
+                            <% } %>
+                        </td>
+                    <% } %>
+                    </tr>
+                <% } %>
+            </table>
+
+            <!-- Bottom layer: snake -->
+            <table class="table bottom">
+                <% for (let i = 0; i < 12; i++) { %>
+                    <tr>
+                    <% for (let j = 0; j < 12; j++) { %>
+                        <td><img src="/resources/empty.png" class="recolored" alt=""></td>
+                    <% } %>
+                    </tr>
+                <% } %>
+            </table>
+
+            <!-- Top layer: fruits / ouch -->
+            <table class="table top">
+                <% for (let i = 0; i < 12; i++) { %>
+                    <tr>
+                    <% for (let j = 0; j < 12; j++) { %>
+                        <td><img src="/resources/empty.png" class="recolored" alt=""></td>
+                    <% } %>
+                    </tr>
+                <% } %>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="won-message" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+   <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="staticBackdropLabel">You win!</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Congratulations! You've won the game of snake :D
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal fade" id="lost-message" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+   <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h1 class="modal-title fs-5" id="staticBackdropLabel">You lost</h1>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        Oopsie daisy! Better luck next time!
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-primary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+    let direction = 'right';
+    let gameOver = false;
+    const BOARD_SIZE    = 12;
+    const bottomTable   = document.querySelector(".table.bottom");
+    const topTable      = document.querySelector(".table.top");
+
+    const contentToFile = {
+        empty: 'empty.png',
+        head: 'head-1.png',
+        body: 'body-1.png',
+        turn: 'turn-1.png',
+        tail: 'tail-1.png',
+        ouch: 'ouch-1.png',
+        fruit: 'cherry.png'
+    };
+
+    function renderBoardLayer(table, board) {
+        for (let y = 0; y < BOARD_SIZE; y++) {
+            for (let x = 0; x < BOARD_SIZE; x++) {
+                const cell = table.rows[y].cells[x].querySelector('img');
+                const content = board[y][x].content || 'empty';
+                const rotation = board[y][x].rotation || 0;
+                cell.src = `/resources/${contentToFile[content] || 'empty.png'}`;
+                cell.style.transform = `rotate(${rotation}deg)`;
+            }
+        }
+    }
+
+    function keyToDirection(key) {
+        switch (key) {
+            case "ArrowUp": case "w":
+                return "up";
+            
+            case "ArrowDown": case "s":
+                return "down";
+            
+            case "ArrowLeft": case "a":
+                return "left";
+            
+            case "ArrowRight": case "d":
+                return "right";
+            
+            default: return null;
+        }
+    }
+
+    document.addEventListener("keydown", (event) => {
+        const dir = keyToDirection(event.key);
+        if(dir) direction = dir;
+    });
+
+    socket.emit('singleplayer:start');
+
+    setInterval(() => {
+        if (!direction || gameOver) return;
+        socket.emit('singleplayer:tick', direction);
+    }, 200);
+
+    socket.on('game:board', ({ bottom, top }) => {
+        renderBoardLayer(bottomTable, bottom);
+        renderBoardLayer(topTable, top);
+    });
+    
+    socket.on('game:won', () => {
+        gameOver = true;
+        const wonModalElement = document.getElementById('won-message');
+        const wonModal = new bootstrap.Modal(wonModalElement);
+
+        wonModal.show();
+
+        wonModalElement.addEventListener('hidden.bs.modal', () => {
+            window.location.href = '/';
+        }, { once: true }); // remove listener after first use
+    });
+
+    socket.on('game:lost', () => {
+        gameOver = true;
+        const lostModalElement = document.getElementById('lost-message');
+        const lostModal = new bootstrap.Modal(lostModalElement);
+
+        lostModal.show();
+
+        lostModalElement.addEventListener('hidden.bs.modal', () => {
+            window.location.href = '/';
+        }, { once: true }); // remove listener after first use
+    });
+
+</script>

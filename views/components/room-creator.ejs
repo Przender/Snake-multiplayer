@@ -1,0 +1,97 @@
+<div class="modal fade" id="room-creator-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Room creation</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="room-creator-form">
+                    <div class="mb-3">
+                        <label for="room-name" class="form-label">Room name</label>
+                        <input type="text" class="form-control" id="room-name" minlength="3" maxlength="32" required >
+                        <div id="roomNameHelp" class="form-text">The name your room will be seen under.</div>
+                    </div>
+                    <div class="mb-3 collapse" id="password-group">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="text" class="form-control" id="password" minlength="5" maxlength="32">
+                        <div id="passwordHelp" class="form-text">The password players will need to join.</div>
+                    </div>
+                    <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox" role="switch" id="private">
+                        <label class="form-check-label" for="private">Private</label>
+                    </div>
+                    <div class="my-3"></div>
+                    <div class="mb-3 form-check">
+                        <input type="checkbox" class="form-check-input" id="watchable">
+                        <label class="form-check-label" for="watchable">Watchable</label>
+                        <div id="watchableHelp" class="form-text">Toggle whether your game will be watchable to others.</div>
+                    </div>
+
+                    <button class="btn btn-primary" id="room-creator-btn">Create Room</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const privateSwitch = document.getElementById('private');
+    const passwordGroup = document.getElementById('password-group');
+    const passwordInput = document.getElementById('password');
+    const modal         = document.getElementById('room-creator-modal');
+    const collapse      = new bootstrap.Collapse(passwordGroup, { toggle: false });
+    const roomCreatorBtn = document.getElementById('room-creator-btn');
+    const form          = document.getElementById('room-creator-form');
+
+    privateSwitch.addEventListener('change', () => {
+         if (privateSwitch.checked) {
+            collapse.show();
+            passwordInput.focus();
+        } else {
+            collapse.hide();
+        }
+        if (!privateSwitch.checked) passwordInput.value = '';
+    });
+
+    modal.addEventListener('show.bs.modal', () => {
+        privateSwitch.checked = false;
+        collapse.hide();
+        passwordInput.value = '';
+    });
+
+    roomCreatorBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        const nameField     = document.getElementById('room-name');
+        const passwordField = document.getElementById('password');
+
+        nameField.setCustomValidity("");
+        passwordField.setCustomValidity("");
+
+        const name      = nameField.value;
+        const password  = passwordField.value;
+        const isPrivate = document.getElementById('private').checked;
+        const watchable = document.getElementById('watchable').checked;
+
+        if(isPrivate){
+            if(!password || password.length <= 0) {
+                passwordField.setCustomValidity("Password field can't be empty.");
+                passwordField.reportValidity();
+                return;
+            }
+            if(password.length < 5) {
+                passwordField.setCustomValidity("Password must have at least 5 characters.");
+                passwordField.reportValidity();
+                return;
+            }
+        }
+
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        socket.emit('lobby:create-room-attempt', { name: name.trim(), password, isPrivate, watchable });
+    });
+</script>

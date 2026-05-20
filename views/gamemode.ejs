@@ -1,0 +1,30 @@
+<div class="container d-flex justify-content-center align-items-center">
+    <div class="play-box d-flex flex-column justify-content-center align-items-center">
+        <div class="mb-3">
+            <button id="singleplayer-btn" class="btn btn-success btn-lg play-btn"
+                    onclick="window.location.href='/gamemode?mode=singleplayer'">
+                Singleplayer
+            </button>
+        </div>
+        <div class="mb-3">
+            <button id="multiplayer-btn" class="btn btn-success btn-lg play-btn"
+                    onclick="window.location.href='/gamemode?mode=multiplayer'">
+                Multiplayer
+            </button>
+        </div>
+    </div>
+</div>
+
+<script>
+    
+    const singleBtn = document.getElementById('singleplayer-btn');
+    const multiBtn  = document.getElementById('multiplayer-btn');
+
+    singleBtn.addEventListener('click', () => {
+        window.location.href = '/gamemode?mode=singleplayer';
+    });
+
+    multiBtn.addEventListener('click', () => {
+        window.location.href = '/gamemode?mode=multiplayer';
+    });
+</script>

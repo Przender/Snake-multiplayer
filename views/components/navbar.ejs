@@ -1,0 +1,45 @@
+<nav class="navbar navbar-expand-lg p-3 mb-2 bg-dark text-white">
+    <div class="container-fluid">
+        <a class="navbar-brand mb-0 h1 fs-3" href="/">
+            <span style="color: greenyellow;">Snak</span><span style="color: green;">es</span>
+        </a>
+
+        <div class="d-flex ms-auto">
+            <div class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <%= username %>
+                </a>
+                <% if (!loggedIn) { %>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/login">Log In</a></li>
+                        <%# <li><a class="dropdown-item" role="button" id="set-nickname-btn">Set Nickname</a></li> %>
+                    </ul>
+                <% } else { %>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li><a class="dropdown-item" href="/log-out">Log out</a></li>
+                        <li><a class="dropdown-item" role="button" id="delete-account-btn">Delete account</a></li>
+                    </ul>
+                <% } %>
+            </div>
+        </div>
+        
+    </div>
+</nav>
+
+<% if (loggedIn) { %>
+    <%- include('./delete-account-modal') %>
+<% } %>
+
+<script>
+    const deleteAccBtn = document.getElementById('delete-account-btn');
+
+    if (deleteAccBtn) {
+        deleteAccBtn.addEventListener('click', () => {
+            const el = document.getElementById("delete-account-modal");
+            const instance = new bootstrap.Modal(el);
+
+            instance.show();
+        });
+    }
+
+</script>
