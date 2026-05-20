@@ -14,7 +14,7 @@
   "keywords": [],
   "author": "Przender",
   "license": "ISC",
-  "type": "commonjs"
+  "type": "commonjs",
 
   "dependencies": {
     "cookie": "^0.6.0",
